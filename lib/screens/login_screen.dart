@@ -4,6 +4,7 @@ import 'package:flora/themes/colors.dart';
 import 'package:flora/themes/styles.dart';
 import 'package:flora/widgets/custom_button.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flora/constants/app_helpers.dart';
 import 'package:flutter_icons/flutter_icons.dart';
@@ -26,6 +27,7 @@ class _LoginScreenState extends State<LoginScreen>
     {'image': woman, 'title': 'Chat with friends & family'},
   ];
   int currentIndex = 0;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -118,14 +120,30 @@ class _LoginScreenState extends State<LoginScreen>
               Column(
                 children: [
                   CustomButtom(
+                      isLoading: _isLoading,
+                      loadingText: 'Logging in...',
                       onPressed: () {
-                        auth.signInWithGoogle(context: context);
+                        auth.signInWithGoogle(context: context).then((value) {
+                          if (value!.displayName != null) {
+                            setState(() {
+                              _isLoading = true;
+                            });
+                            if (kDebugMode) {
+                              print(value);
+                            }
+                          } else {
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }
+                        });
                       },
                       color: AppColors.googlebuttonColor,
                       icon: FlutterIcons.google_mco,
                       text: 'Login with Google'),
                   const SizedBox(height: AppHelpers.kdefaultPadding),
                   CustomButtom(
+                      isLoading: false,
                       onPressed: () {},
                       icon: FlutterIcons.apple1_ant,
                       color: AppColors.facebookbuttonColor,

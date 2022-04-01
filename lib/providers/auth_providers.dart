@@ -1,17 +1,28 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flora/constants/firestore_contants.dart';
+import 'package:flora/model/firebase_chat.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 
 class AuthProvider with ChangeNotifier {
+  final FirebaseAuth _firebaseAuth;
+
+  AuthProvider(this._firebaseAuth);
+  Stream<User?> get authStateChanges => _firebaseAuth.authStateChanges();
   bool _isLoggedIn = false;
+  get user => _firebaseAuth.currentUser;
   bool get isLoggedIn => _isLoggedIn;
 
   void setLoggedIn(bool value) {
     _isLoggedIn = value;
     notifyListeners();
+  }
+
+  getUser() {
+    return FirebaseAuth.instance.currentUser!;
   }
 
   Future<User?> signInWithGoogle({required BuildContext context}) async {
@@ -49,9 +60,11 @@ class AuthProvider with ChangeNotifier {
               await auth.signInWithCredential(credential);
           savetofirestore(
             email: userCredential.user!.email ?? '',
-            username: userCredential.user!.displayName?.split(' ').first ?? '',
+            username: userCredential.user!.displayName ?? '',
             imageurl: userCredential.user!.photoURL ?? '',
             userid: userCredential.user!.uid,
+            createdAt: DateTime.now(),
+            lastseen: DateTime.now(),
           );
 
           user = userCredential.user;
@@ -73,13 +86,76 @@ class AuthProvider with ChangeNotifier {
   Future<void> savetofirestore(
       {required String userid,
       String? username,
+      DateTime? createdAt,
       required String email,
+      DateTime? lastseen,
       String? imageurl}) async {
-    return FirebaseFirestore.instance.collection('users').doc().set({
+    return FirebaseFirestore.instance.collection('users').doc(email).set({
       'email': email,
       'username': username,
       'userid': userid,
-      'imageurl': imageurl
+      'imageurl': imageurl,
+      'createdAt': createdAt ?? DateTime.now(),
+      'lastseen': lastseen ?? false,
     });
   }
+
+  Future updateLastSeen() {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(getUser().email)
+        .update({
+      'lastseen': DateTime.now(),
+    });
+  }
+
+  Future signeOut() {
+    return _firebaseAuth.signOut();
+  }
+
+  Future sendMessage(
+      {required String message,
+      required String receiverId,
+      required String senderId}) async {
+    await FirebaseFirestore.instance.collection('messages').add({
+      'sender': senderId,
+      'receiver': receiverId,
+      'message': message,
+      'createdAt': DateTime.now(),
+    });
+  }
+
+  Future sendMessages(String content, String type, String groupChatId,
+      String currentUserId, String peerId) {
+    DocumentReference documentReference = FirebaseFirestore.instance
+        .collection(FirestoreConstants.pathMessageCollection)
+        .doc(groupChatId)
+        .collection(groupChatId)
+        .doc(DateTime.now().millisecondsSinceEpoch.toString());
+
+    MessageChat messageChat = MessageChat(
+      idFrom: currentUserId,
+      idTo: peerId,
+      timestamp: DateTime.now().millisecondsSinceEpoch.toString(),
+      content: content,
+      type: type,
+    );
+
+    FirebaseFirestore.instance.runTransaction((transaction) async {
+      transaction.set(
+        documentReference,
+        messageChat.toJson(),
+      );
+    });
+    return documentReference.get();
+  }
+}
+
+Future deleteMessage({
+  required String messageId,
+}) async {
+  await FirebaseFirestore.instance
+      .collection('messages')
+      .doc(messageId)
+      .delete();
 }
