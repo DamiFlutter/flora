@@ -73,6 +73,14 @@ class _UserScreenState extends State<UserScreen>
                                         context,
                                         MaterialPageRoute(
                                             builder: (context) => NewMessage(
+                                                  lastSeen: snapshot.data
+                                                      .docs[index]['lastseen'],
+                                                  active: snapshot.data
+                                                      .docs[index]['active'],
+                                                  imageurl: snapshot.data
+                                                      .docs[index]['imageurl'],
+                                                  username: snapshot.data
+                                                      .docs[index]['username'],
                                                   peerId: snapshot.data
                                                       .docs[index]['userid'],
                                                   itmes: snapshot
@@ -97,26 +105,30 @@ class _UserScreenState extends State<UserScreen>
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              subtitle: Row(
-                                children: [
-                                  Text(
-                                    'last seen: ',
-                                    style: GoogleFonts.andika(
-                                      color: AppColors.grey3,
-                                      fontSize: 12,
+                              subtitle: snapshot.data.docs[index]['active'] ==
+                                      'online'
+                                  ? Text('online now')
+                                  : Row(
+                                      children: [
+                                        Text(
+                                          'last seen: ',
+                                          style: GoogleFonts.andika(
+                                            color: AppColors.grey3,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        Text(
+                                          timeago.format(snapshot
+                                              .data.docs[index]
+                                              .data()['lastseen']
+                                              .toDate()),
+                                          style: GoogleFonts.andika(
+                                            color: AppColors.grey3,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
-                                  Text(
-                                    timeago.format(snapshot.data.docs[index]
-                                        .data()['lastseen']
-                                        .toDate()),
-                                    style: GoogleFonts.andika(
-                                      color: AppColors.grey3,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ],
-                              ),
                             );
                           },
                           itemCount: snapshot.data?.docs.length ?? 0),

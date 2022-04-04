@@ -1,7 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flora/constants/firestore_contants.dart';
 import 'package:flora/model/firebase_chat.dart';
+import 'package:timeago/timeago.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -100,17 +102,30 @@ class AuthProvider with ChangeNotifier {
     });
   }
 
-  Future updateLastSeen() {
+  Future updateLastSeen({
+    required String active,
+  }) async {
     return FirebaseFirestore.instance
         .collection('users')
         .doc(getUser().email)
         .update({
+      'active': active,
       'lastseen': DateTime.now(),
     });
   }
 
+  Future updatePushToken() {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(getUser().email)
+        .update({
+      'pushtoken': FirebaseMessaging.instance.getToken(),
+    });
+  }
+
   Future signeOut() {
-    return _firebaseAuth.signOut();
+    updateLastSeen(active: 'last seen: ${DateTime.now()}');
+    return _firebaseAuth.signOut().then((value) {});
   }
 
   Future sendMessage(

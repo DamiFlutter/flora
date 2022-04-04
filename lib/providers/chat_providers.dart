@@ -1,5 +1,5 @@
 import 'dart:io';
-
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flora/constants/firestore_contants.dart';
 import 'package:flora/model/firebase_chat.dart';
@@ -34,7 +34,7 @@ class ChatProvider {
         .collection(FirestoreConstants.pathMessageCollection)
         .doc(groupChatId)
         .collection(groupChatId)
-        .orderBy(FirestoreConstants.timestamp, descending: false)
+        .orderBy(FirestoreConstants.timestamp, descending: true)
         .limit(limit)
         .snapshots();
   }
@@ -65,6 +65,24 @@ class ChatProvider {
         messageChat.toJson(),
       );
     });
+  }
+
+  Future deleteMessage(
+    chatid,
+    String id,
+  ) {
+    return FirebaseFirestore.instance
+        .collection(FirestoreConstants.pathMessageCollection)
+        .doc(chatid)
+        .collection(chatid)
+        .doc(id)
+        .delete();
+  }
+
+  UploadTask uploadFile(File image, String fileName) {
+    Reference reference = FirebaseStorage.instance.ref().child(fileName);
+    UploadTask uploadTask = reference.putFile(image);
+    return uploadTask;
   }
 }
 

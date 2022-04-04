@@ -27,15 +27,19 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  # agora_rtc_engine: ^5.0.1
+  cached_network_image: ^3.2.0
   chat_bubbles: ^1.2.0
   cloud_firestore: null
   cupertino_icons: ^1.0.2
   firebase_auth: null
   firebase_core: null
   firebase_messaging: null
+  firebase_storage: ^10.2.10
   flutter:
     sdk: flutter
   flutter_icons: ^1.1.0
+  # flutter_sound: ^9.1.9
   google_fonts: null
   google_sign_in: ^5.2.4
   image_picker: null

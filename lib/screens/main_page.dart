@@ -2,6 +2,7 @@ import 'package:flora/providers/auth_providers.dart';
 import 'package:flora/screens/home_screen.dart';
 import 'package:flora/screens/profile_screen.dart';
 import 'package:flora/screens/users_screen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_icons/flutter_icons.dart';
 import 'package:provider/provider.dart';
@@ -13,7 +14,7 @@ class MainPage extends StatefulWidget {
   State<MainPage> createState() => _MainPageState();
 }
 
-class _MainPageState extends State<MainPage> {
+class _MainPageState extends State<MainPage> with WidgetsBindingObserver {
   final PageController? _pageController = PageController();
   int _page = 0;
   List pages = [
@@ -25,7 +26,38 @@ class _MainPageState extends State<MainPage> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    Provider.of<AuthProvider>(context, listen: false).updateLastSeen();
+    // Provider.of<AuthProvider>(context, listen: false).updateLastSeen(
+    //   active: 'online',
+    // );
+    WidgetsBinding.instance!.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      setState(() {
+        Provider.of<AuthProvider>(context, listen: false).updateLastSeen(
+          active: 'online',
+        );
+      });
+      if (kDebugMode) {
+        print('resumed');
+      }
+    } else if (state == AppLifecycleState.detached) {
+      Provider.of<AuthProvider>(context, listen: false).updateLastSeen(
+        active: 'offline',
+      );
+      if (kDebugMode) {
+        print('detached');
+      }
+    } else if (state == AppLifecycleState.paused) {
+      if (kDebugMode) {
+        print('paused');
+      }
+      Provider.of<AuthProvider>(context, listen: false).updateLastSeen(
+        active: 'offline',
+      );
+    }
   }
 
   @override
